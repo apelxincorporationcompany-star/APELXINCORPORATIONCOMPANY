@@ -1,0 +1,91 @@
+Apelxincorporatio<!DOCTYPE html>
+<html>
+<head>
+  <title>Referral Signup</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+</head>
+<body>
+
+<h2>Signup</h2>
+<input type="email" id="signupEmail" placeholder="Email"><br>
+<input type="password" id="signupPassword" placeholder="Password"><br>
+<button onclick="handleSignup()">Sign Up</button>
+
+<h2>Login</h2>
+<input type="email" id="loginEmail" placeholder="Email"><br>
+<input type="password" id="loginPassword" placeholder="Password"><br>
+<button onclick="handleLogin()">Login</button>
+
+<h2>Your Referral Link</h2>
+<p id="referralLink"></p>
+
+<script>
+// ------------------ Initialize Supabase ------------------
+const supabaseUrl = 'YOUR_PROJECT_URL'   // replace with your Supabase Project URL
+const supabaseKey = 'YOUR_ANON_KEY'      // replace with your Supabase anon public key
+const supabase = supabase.createClient(supabaseUrl, supabaseKey)
+
+// ------------------ Capture Referral from URL ------------------
+const params = new URLSearchParams(window.location.search)
+const referralFromURL = params.get('ref')  // e.g., ?ref=user123
+
+// ------------------ Signup Function ------------------
+async function handleSignup() {
+  const email = document.getElementById('signupEmail').value
+  const password = document.getElementById('signupPassword').value
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password
+  })
+
+  if (error) {
+    alert('Signup error: ' + error.message)
+    return
+  }
+
+  // Insert user into database with referral info
+  await supabase.from('users').insert([
+    {
+      id: data.user.id,
+      email: email,
+      referral_code: email.split('@')[0],
+      referred_by: referralFromURL || null
+    }
+  ])
+
+  alert('Signup successful!')
+
+  // Show the user's own referral link
+  showReferralLink(email)
+}
+
+// ------------------ Login Function ------------------
+async function handleLogin() {
+  const email = document.getElementById('loginEmail').value
+  const password = document.getElementById('loginPassword').value
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  })
+
+  if (error) {
+    alert('Login error: ' + error.message)
+    return
+  }
+
+  alert('Login successful!')
+  showReferralLink(email)
+}
+
+// ------------------ Show Referral Link ------------------
+function showReferralLink(email) {
+  const code = email.split('@')[0]
+  const link = `${window.location.origin}/register.html?ref=${code}`
+  document.getElementById('referralLink').innerText = link
+}
+</script>
+
+</body>
+</html>ncompany@gmail.com
